@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Bench.BulkInsert
 {
@@ -42,18 +43,34 @@ namespace Bench.BulkInsert
                 // the connection to the server, we can assume that this is already there
                 store.Maintenance.Send(new Raven.Client.Documents.Operations.GetStatisticsOperation());
 
-                var sp = Stopwatch.StartNew();
                 var docs = int.Parse(args[1]);
-                using (var bulk = store.BulkInsert())
+                var threads = new Thread[int.Parse(args[2])];
+
+                for (int index = 0; index < threads.Length; index++)
                 {
-                    for (int i = 0; i < docs; i++)
-                    {
-                        var user = users[i % users.Count];
-                        bulk.Store(user);
-                        user.Id = null; // reset the user generated id
-                    }
+                    threads[index] = new Thread(() => DoBulkInsert(users, store, docs));
+                    threads[index].Start();
+                }
+                var sp = Stopwatch.StartNew();
+                foreach (var thread in threads)
+                {
+                    thread.Join();
                 }
                 Console.WriteLine(sp.Elapsed);
+
+            }
+        }
+
+        private static void DoBulkInsert(List<User> users, DocumentStore store, int docs)
+        {
+            using (var bulk = store.BulkInsert())
+            {
+                for (int i = 0; i < docs; i++)
+                {
+                    var user = users[i % users.Count];
+                    bulk.Store(user);
+                    user.Id = null; // reset the user generated id
+                }
             }
         }
     }
