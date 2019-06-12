@@ -39,9 +39,10 @@ namespace Bench.BulkInsert
                 store.Initialize();
 
                 var sp = Stopwatch.StartNew();
+                var docs = int.Parse(args[1]);
                 using (var bulk = store.BulkInsert())
                 {
-                    for (int i = 0; i < 100_000; i++)
+                    for (int i = 0; i < docs; i++)
                     {
                         var user = users[i % users.Count];
                         bulk.Store(user);
