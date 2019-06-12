@@ -26,7 +26,9 @@ namespace Bench.BulkInsert
                 .RuleFor(x => x.Friends, x => x.Make(x.Random.Number(2,6), () => x.Internet.UserName()))
                 .RuleFor(x => x.Address, x => addressGen.Generate());
 
-           
+
+            var users = userGen.Generate(10_000);
+
 
             using(var store = new DocumentStore
             {
@@ -41,8 +43,9 @@ namespace Bench.BulkInsert
                 {
                     for (int i = 0; i < 100_000; i++)
                     {
-                        var a = userGen.Generate();
-                        bulk.Store(a);
+                        var user = users[i % users.Count];
+                        bulk.Store(user);
+                        user.Id = null; // reset the user generated id
                     }
                 }
                 Console.WriteLine(sp.Elapsed);
