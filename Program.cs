@@ -38,6 +38,10 @@ namespace Bench.BulkInsert
             {
                 store.Initialize();
 
+                // here to force a request for RavenDB, nothing else. So the benchmark won't have to create
+                // the connection to the server, we can assume that this is already there
+                store.Maintenance.Send(new Raven.Client.Documents.Operations.GetStatisticsOperation());
+
                 var sp = Stopwatch.StartNew();
                 var docs = int.Parse(args[1]);
                 using (var bulk = store.BulkInsert())
